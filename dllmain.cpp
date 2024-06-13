@@ -1,4 +1,4 @@
-﻿#include "pch.h"
+#include "pch.h"
 #include <windows.h>
 #include <tchar.h>
 #include <chrono>
@@ -94,7 +94,6 @@ DWORD WINAPI ThreadProc(LPVOID lpParameter)
 {
     // Notepad++의 상태 표시줄에 접근하기 위해 핸들 검색
     HWND hwnd = FindWindow(_T("Notepad++"), NULL);
-    MessageBox(NULL, _T("Failed to install keyboard hook!"), _T("Error"), MB_ICONERROR);
     if (hwnd)
     {
         hwndStatus = FindWindowEx(hwnd, NULL, _T("msctls_statusbar32"), NULL);
@@ -131,7 +130,6 @@ BOOL APIENTRY DllMain(HMODULE hModule,
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-        MessageBox(NULL, _T("Failed to install keyboard hook!"), _T("Error"), MB_ICONERROR);
         CreateThread(NULL, 0, ThreadProc, NULL, 0, NULL);
         break;
     case DLL_THREAD_ATTACH:
