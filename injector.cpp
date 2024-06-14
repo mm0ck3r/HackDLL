@@ -1,3 +1,5 @@
+#pragma warning(disable:4996)
+
 #include <windows.h>
 #include <iostream>
 #include <string>
